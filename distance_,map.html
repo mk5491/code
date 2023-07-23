@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Distance and Time Estimation on Map</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #map {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        #container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Distance and Time Estimation on Map</h2>
+        <label for="origin">Origin:</label>
+        <input type="text" id="origin" placeholder="Enter origin address">
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" placeholder="Enter destination address">
+
+        <button onclick="calculateDistance()">Calculate</button>
+
+        <div id="result">
+            <p><strong>Distance:</strong> <span id="distance"></span></p>
+            <p><strong>Duration:</strong> <span id="duration"></span></p>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <script>
+        let map;
+        let directionsService;
+        let directionsDisplay;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: 0, lng: 0},
+                zoom: 10
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsDisplay = new google.maps.DirectionsRenderer();
+            directionsDisplay.setMap(map);
+        }
+
+        function calculateDistance() {
+            const origin = document.getElementById("origin").value;
+            const destination = document.getElementById("destination").value;
+
+            // Replace 'YOUR_GOOGLE_MAPS_API_KEY' with your actual API key
+            const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+            const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "OK") {
+                        const distance = data.rows[0].elements[0].distance.text;
+                        const duration = data.rows[0].elements[0].duration.text;
+
+                        document.getElementById("distance").innerText = distance;
+                        document.getElementById("duration").innerText = duration;
+                        document.getElementById("result").style.display = "block";
+
+                        calculateRouteOnMap(origin, destination);
+                    } else {
+                        alert("Error: Unable to calculate distance and time.");
+                    }
+                })
+                .catch(error => {
+                    alert("An error occurred while fetching data from the server.");
+                    console.error(error);
+                });
+        }
+
+        function calculateRouteOnMap(origin, destination) {
+            const request = {
+                origin: origin,
+                destination: destination,
+                travelMode: 'DRIVING'
+            };
+
+            directionsService.route(request, function(result, status) {
+                if (status === 'OK') {
+                    directionsDisplay.setDirections(result);
+                } else {
+                    alert('Error: Unable to calculate the route on the map.');
+                }
+            });
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+</body>
+</html>

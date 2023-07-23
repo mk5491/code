@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Distance and Time Estimation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+
+        #container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            display: none;
+        }
+
+        #distance,
+        #duration {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Distance and Time Estimation</h2>
+        <label for="origin">Origin:</label>
+        <input type="text" id="origin" placeholder="Enter origin address">
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" placeholder="Enter destination address">
+
+        <button onclick="calculateDistance()">Calculate</button>
+
+        <div id="result">
+            <p><strong>Distance:</strong> <span id="distance"></span></p>
+            <p><strong>Duration:</strong> <span id="duration"></span></p>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        let map;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 0, lng: 0 },
+                zoom: 8,
+            });
+        }
+
+        function calculateDistance() {
+            const origin = document.getElementById("origin").value;
+            const destination = document.getElementById("destination").value;
+
+            const service = new google.maps.DistanceMatrixService();
+            service.getDistanceMatrix(
+                {
+                    origins: [origin],
+                    destinations: [destination],
+                    travelMode: google.maps.TravelMode.DRIVING,
+                },
+                (response, status) => {
+                    if (status === "OK") {
+                        const distance = response.rows[0].elements[0].distance.text;
+                        const duration = response.rows[0].elements[0].duration.text;
+
+                        document.getElementById("distance").innerText = distance;
+                        document.getElementById("duration").innerText = duration;
+                        document.getElementById("result").style.display = "block";
+
+                        // Display the route on the map
+                        const directionsService = new google.maps.DirectionsService();
+                        const directionsRenderer = new google.maps.DirectionsRenderer();
+                        directionsRenderer.setMap(map);
+
+                        directionsService.route(
+                            {
+                                origin: origin,
+                                destination: destination,
+                                travelMode: google.maps.TravelMode.DRIVING,
+                            },
+                            (result, status) => {
+                                if (status === "OK") {
+                                    directionsRenderer.setDirections(result);
+                                } else {
+                                    alert("Error: Unable to calculate route on the map.");
+                                    console.error(status);
+                                }
+                            }
+                        );
+                    } else {
+                        alert("Error: Unable to calculate distance and time.");
+                    }
+                }
+            );
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+</body>
+</html>
